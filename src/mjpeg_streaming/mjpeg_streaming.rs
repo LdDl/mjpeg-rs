@@ -3,52 +3,34 @@ use opencv::{
     core::Vector,
 };
 
-use actix_web::{web, http, App, HttpServer, HttpResponse, Responder};
+use actix_web::{
+    web,
+    http,
+    App,
+    HttpServer,
+    HttpResponse,
+    Responder
+};
 use actix_cors::Cors;
 
 use crate::mjpeg_streaming::{
     broadcaster::Broadcaster
 };
 
-use std::sync::Mutex;
-use std::sync::mpsc::{
-    Receiver
+use std::sync::{
+    Mutex,
+    mpsc::{
+        Receiver
+    }
 };
 
 #[actix_web::main]
-pub async fn start_mjpeg_streaming(server_host: String, server_port: i32, rx_frames_data: Receiver<std::vec::Vec<u8>>, input_width: u32, input_height: u32) -> std::io::Result<()> {
+pub async fn start_mjpeg_streaming(server_host: String, server_port: i32, rx_frames_data: Receiver<Vector<u8>>, input_width: u32, input_height: u32) -> std::io::Result<()> {
     let bind_address = format!("{}:{}", server_host, server_port);
     println!("MJPEG Streamer is starting on host:port {}:{}", server_host, server_port);
 
     let broadcaster = web::Data::new(Mutex::new(Broadcaster::default()));
     Broadcaster::spawn_reciever(broadcaster.clone(), rx_frames_data, input_width, input_height);
-
-    HttpServer::new(move || {
-        let cors = Cors::default()
-            .allow_any_origin()
-            .allowed_headers(vec![http::header::ORIGIN, http::header::AUTHORIZATION, http::header::CONTENT_TYPE, http::header::CONTENT_LENGTH, http::header::ACCEPT, http::header::ACCEPT_ENCODING])
-            .allowed_methods(vec!["GET"])
-            .expose_headers(vec![http::header::CONTENT_LENGTH])
-            .supports_credentials()
-            .max_age(5600);
-        App::new()
-            .wrap(cors)
-            .app_data(broadcaster.clone())
-            .configure(init_routes)
-    })
-    .bind(&bind_address)
-    .unwrap_or_else(|_| panic!("Could not bind MJPEG streamer to address: {}", &bind_address))
-    .run()
-    .await
-}
-
-#[actix_web::main]
-pub async fn start_advanced_mjpeg_streaming(server_host: String, server_port: i32, rx_frames_data: Receiver<Vector<u8>>, input_width: u32, input_height: u32) -> std::io::Result<()> {
-    let bind_address = format!("{}:{}", server_host, server_port);
-    println!("MJPEG Streamer is starting on host:port {}:{}", server_host, server_port);
-
-    let broadcaster = web::Data::new(Mutex::new(Broadcaster::default()));
-    Broadcaster::spawn_advanced_reciever(broadcaster.clone(), rx_frames_data, input_width, input_height);
     
     HttpServer::new(move || {
         let cors = Cors::default()
