@@ -10,7 +10,7 @@
 
 Just a template code for serving MJPEG stream via OpenCV.
 
-Yes, this repo code is stolen (*highly insipred* if you want to) from https://github.com/dskkato/mjpeg-rs and in https://github.com/t924417424/mjpeg_rs.
+Yes, this repo code is stolen (*highly inspired* if you want to) from https://github.com/dskkato/mjpeg-rs and in https://github.com/t924417424/mjpeg_rs.
 
 What the purpose then? Well, I've change a couple of things:
 
