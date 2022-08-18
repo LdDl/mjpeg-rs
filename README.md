@@ -41,6 +41,8 @@ cargo run
 
 Open http://localhost:8090/live in browser and enjoy
 
+There would be opened imshow() object also (don't close it accidenlty since main thread will be terminated).
+
 ## Credits
 Thanks to:
  * https://github.com/t924417424/mjpeg_rs for inspiring
