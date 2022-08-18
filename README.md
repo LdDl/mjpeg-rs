@@ -25,7 +25,8 @@ Just modify Rust code in [main](src/main.rs) file to adjust your needs:
 ```rust
     // ...
     // Path to video (could be rtsp or local video file)
-    let video_src_path = "./data/sample_960_540.mp4".to_string();
+    let video_src_path = "rtsp://rtsp.stream/pattern".to_string();
+    // let video_src_path = "./data/sample_960_540.mp4".to_string();
     // ...
     // ...
     // Change host and port for live streaming if needed
@@ -49,4 +50,5 @@ Thanks to:
  * https://github.com/dskkato/mjpeg-rs for actix-web based version
  * https://actix.rs/ for great Web-framework
  * https://github.com/twistedfall/opencv-rust for binding to [OpenCV](https://opencv.org/)
+ * https://rtsp.stream/ for RTSP stream example
  * Rust community and not mentioned authors of other dependencies

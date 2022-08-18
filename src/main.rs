@@ -77,6 +77,7 @@ fn run(src: String) -> opencv::Result<()> {
 }
 
 fn main() {
-    let video_src_path = "./data/sample_960_540.mp4".to_string();
+    let video_src_path = "rtsp://rtsp.stream/pattern".to_string();
+    // let video_src_path = "./data/sample_960_540.mp4".to_string();
     run(video_src_path).unwrap()
 }
