@@ -3,16 +3,20 @@ use opencv::{
     videoio::VideoCapture,
     videoio::CAP_ANY,
     core::Mat,
+    core::Vector,
     highgui::named_window,
     highgui::resize_window,
     highgui::imshow,
     highgui::wait_key,
+    imgcodecs::imencode,
 };
 
 use std::thread;
 use std::sync::{mpsc};
 mod mjpeg_streaming;
 use mjpeg_streaming::start_mjpeg_streaming;
+use mjpeg_streaming::start_advanced_mjpeg_streaming;
+// use crossbeam_channel::bounded;
 
 fn run(src: String) -> opencv::Result<()> {
     println!("Video source is: {src}");
@@ -30,7 +34,13 @@ fn run(src: String) -> opencv::Result<()> {
     let (tx_mjpeg, rx_mjpeg) = mpsc::sync_channel(25);
 
     thread::spawn(move || {
-        match start_mjpeg_streaming("localhost".to_string(), 8090, rx_mjpeg, first_frame_cols, first_frame_rows) {
+        // match start_mjpeg_streaming("localhost".to_string(), 8090, rx_mjpeg, first_frame_cols, first_frame_rows) {
+        //     Ok(_) => {},
+        //     Err(err) => {
+        //         panic!("Can't start MJPEG streaming due the error: {:?}", err)
+        //     }
+        // }
+        match start_advanced_mjpeg_streaming("localhost".to_string(), 8090, rx_mjpeg, first_frame_cols, first_frame_rows) {
             Ok(_) => {},
             Err(err) => {
                 panic!("Can't start MJPEG streaming due the error: {:?}", err)
@@ -48,20 +58,28 @@ fn run(src: String) -> opencv::Result<()> {
                     break;
                 }
             }
+            let cl = read_frame.clone();
             let mut mjpeg_frame = unsafe {
                 Vec::from(std::slice::from_raw_parts(
-                    read_frame.data() as *const u8,
+                    cl.data() as *const u8,
                     (first_frame_cols * first_frame_rows * 3) as usize,
                 ))
             };
             for i in 0..(first_frame_cols * first_frame_rows) {
                 mjpeg_frame.swap((i * 3) as usize, (i * 3 + 2) as usize);
             }
-            tx_mjpeg.send(mjpeg_frame).unwrap();
+            let mut buffer = Vector::<u8>::new();
+            let params = Vector::<i32>::new();
+            let encoded = imencode(".jpg", &cl, &mut buffer, &params).unwrap();
+            if !encoded {
+                println!("image has not been encoded");
+            }
+            // tx_mjpeg.send(mjpeg_frame).unwrap();
+            tx_mjpeg.send(buffer).unwrap();
             tx.send(read_frame).unwrap();
         }
     });
-    
+
     for received in rx {
         let mut cloned_frame = received.clone();
         imshow(window_name, &mut cloned_frame).unwrap();

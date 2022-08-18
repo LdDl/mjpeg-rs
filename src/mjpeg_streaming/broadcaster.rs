@@ -1,5 +1,10 @@
 // Inspired by https://github.com/dskkato/mjpeg-rs#live-streaming-server-with-rustactix-web
 
+use opencv::{
+    prelude::*,
+    core::Vector,
+};
+
 use std::thread;
 use std::sync::Mutex;
 use std::pin::Pin;
@@ -43,9 +48,15 @@ impl Broadcaster {
     pub fn make_message_block(frame: &[u8], width: u32, height: u32) -> Vec<u8> {
         let mut buffer = Vec::new();
         let mut encoder = image::codecs::jpeg::JpegEncoder::new(&mut buffer);
-        encoder.encode(&frame, width, height, image::ColorType::Rgb8).unwrap();
+        // encoder.encode(&frame, width, height, image::ColorType::Rgb8).unwrap();
         let mut msg = format!("--boundarydonotcross\r\nContent-Length:{}\r\nContent-Type:image/jpeg\r\n\r\n", buffer.len()).into_bytes();
         msg.extend(buffer);
+        msg
+    }
+    pub fn make_advanced_message_block(buffer: &Vector<u8>, width: u32, height: u32) -> Vec<u8> {
+        let mut bfu8 = buffer.as_ref();
+        let mut msg = format!("--boundarydonotcross\r\nContent-Length:{}\r\nContent-Type:image/jpeg\r\n\r\n", bfu8.len()).into_bytes();
+        msg.extend(bfu8);
         msg
     }
     fn send_image(&mut self, msg: &[u8]) {
@@ -63,6 +74,14 @@ impl Broadcaster {
         thread::spawn(move || {
             for received in rx_frames_data {
                 let msg = Broadcaster::make_message_block(&received, width, height);
+                _self.lock().unwrap().send_image(&msg);
+            }
+        });
+    }
+    pub fn spawn_advanced_reciever(_self: web::Data<Mutex<Self>>, rx_frames_data: STDReceiver<Vector<u8>>, width: u32, height: u32) {
+        thread::spawn(move || {
+            for received in rx_frames_data {
+                let msg = Broadcaster::make_advanced_message_block(&received, width, height);
                 _self.lock().unwrap().send_image(&msg);
             }
         });

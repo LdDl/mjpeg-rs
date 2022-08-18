@@ -999,6 +999,7 @@ dependencies = [
  "actix-cors",
  "actix-web",
  "crossbeam",
+ "crossbeam-channel",
  "futures",
  "image",
  "opencv",
